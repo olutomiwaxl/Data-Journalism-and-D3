@@ -57,9 +57,18 @@ function makeResponsive() {
     .attr("cy", d => yScale(d.healthcare))
     .attr("r", "20")
     .attr("fill", "pink")
-    .attr("opacity", ".5");
+    .attr("opacity", ".5")
   
+    //.append("text")
+    //.text(function(d){
+      //return d.abbr;
+    //})
+    //.attr("cx", d => xScale(d.poverty))
+    //.attr("cy", d => yScale(d.healthcare))
+    //.attr("font-size", "20px")
+    //.attr("fill", "black");
   
+    
 
    //Initialize tool tip
     // ==============================
