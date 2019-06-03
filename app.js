@@ -1,99 +1,106 @@
 
 function makeResponsive() {
 
-    // if the SVG area isn't empty when the browser loads, remove it
-    // and replace it with a resized version of the chart
-    var svgArea = d3.select("body").select("svg");
-    if (!svgArea.empty()) {
-      svgArea.remove();
-    }
-  
-    // SVG wrapper dimensions are determined by the current width
-    // and height of the browser window.
-    var svgWidth = window.innerWidth;
-    var svgHeight = window.innerHeight;
-  
-    var margin = {
-      top: 50,
-      right: 50,
-      bottom: 50,
-      left: 50
-    };
-  
-    var height = svgHeight - margin.top - margin.bottom;
+    // Set up chart
+    var svgWidth = 960;
+    var svgHeight = 500;
+    var margin = {top: 20, right: 40, bottom: 60, left: 100};
     var width = svgWidth - margin.left - margin.right;
+    var height = svgHeight - margin.top - margin.bottom;
   
-    // data
+   // append svg and chart group
+   var svg = d3.select("#scatter")
+   .append("svg")
+   .attr("height", svgHeight)
+   .attr("width", svgWidth);
+   
+   var chartGroup = svg.append("g")
+   .attr("transform", `translate(${margin.left}, ${margin.top})`); 
+
+   //import  data
     d3.csv("data.csv", function(error, censusData) {
         if (error) throw error;
-//console.log(censusData)
+    //      console.log(censusData)
     censusData.forEach(function(data) {
             data.poverty = +data.poverty;
             data.healthcare= +data.healthcare;
           });
-        
-    // append svg and group
-    var svg = d3.select(".chart")
-      .append("svg")
-      .attr("height", svgHeight)
-      .attr("width", svgWidth);
-  
-    var chartGroup = svg.append("g")
-      .attr("transform", `translate(${margin.left}, ${margin.top})`);
-  
-    // scales
+ 
+    // create scales
     var xScale = d3.scaleLinear()
-    .domain(d3.max(censusData, d => d.poverty))
+    .domain([0, d3.max(censusData, d => d.healthcare)])
     .range([0, width]);
 
     var yScale = d3.scaleLinear()
-    .domain([0, d3.max(censusData, d => d.healthcare)])
+    .domain([0, d3.max(censusData, d => d.poverty)])
     .range([height, 0]);
   
-    // line generator
-    var line = d3.line()
-      .x(d => xScale(d.poverty))
-      .y(d => yScale(d.healthcare));
-   
-   
-    // create path
-    chartGroup.append("path")
-      .attr("d", line(censusData, d => d.poverty))
-      .attr("fill", "none")
-      .attr("stroke", "blue");
-  
-    // append circles to data points
+    var bottomAxis = d3.axisBottom(xScale);
+    var leftAxis = d3.axisLeft(yScale);
+
+
+    // ==============================
+    chartGroup.append("g")
+      .attr("transform", `translate(0, ${height})`)
+      .call(bottomAxis);
+
+    chartGroup.append("g")
+      .call(leftAxis);
+
+  // Create Circles
+    // ==============================
     var circlesGroup = chartGroup.selectAll("circle")
-      .data(censusData, d => d.poverty)
-      .enter()
-      .append("circle")
-      .attr("cx", (d, i) => xScale(i))
-      .attr("cy", d => yScale(d))
-      .attr("r", "5")
-      .attr("fill", "red");
+    .data(censusData)
+    .enter()
+    .append("circle")
+    .attr("cx", d => xScale(d.poverty))
+    .attr("cy", d => yScale(d.healthcare))
+    .attr("r", "20")
+    .attr("fill", "pink")
+    .attr("opacity", ".5");
   
-    // Step 1: Append a div to the body to create tooltips, assign it a class
-    // =======================================================
-    var toolTip = d3.select("body").append("div")
-      .attr("class", "tooltip");
   
-    // Step 2: Add an onmouseover event to display a tooltip
-    circlesGroup
-      .on("mouseover", function(d, i) {
-        toolTip.style("display", "block");
-  
-        toolTip
-          .html(`State: <strong>${censusData, d => d.attr}</strong>`)
-          .style("left", d3.event.pageX + "px")
-          .style("top", d3.event.pageY + "px");
-      })
-      // Step 3: Add an onmouseout event to make the tooltip invisible
-      .on("mouseout", function() {
-        toolTip.style("display", "none");
+
+   //Initialize tool tip
+    // ==============================
+    var toolTip = d3.tip()
+      .attr("class", "tooltip")
+      .offset([80, -60])
+      .html(function(d) {
+        return (`${d.abbr}<br>Poverty Level: ${d.poverty}<br>healthcare: ${d.healthcare}`);
       });
-    });
-   }
+
+   //Create tooltip in the chart
+    // ==============================
+    chartGroup.call(toolTip);
+
+    //Create event listeners to display and hide the tooltip
+    // ==============================
+    circlesGroup.on("mouseover", function(data) {
+      toolTip.show(data, this);
+    })
+      // onmouseout event
+      .on("mouseout", function(data, index) {
+        toolTip.hide(data);
+      });
+
+    // Create axes labels
+    chartGroup.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin.left + 5)
+      .attr("x", 0 - (height / 2))
+      .attr("dy", "1em")
+      .attr("class", "axisText")
+      .text("Healthcare");
+
+    chartGroup.append("text")
+      .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
+      .attr("class", "axisText")
+      .text("Poverty Level (%)");
+  });
   
+  }
+
   // When the browser loads, makeResponsive() is called.
   makeResponsive();
   
