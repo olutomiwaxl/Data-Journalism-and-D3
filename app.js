@@ -28,11 +28,11 @@ function makeResponsive() {
  
     // create scales
     var xScale = d3.scaleLinear()
-    .domain([0, d3.max(censusData, d => d.healthcare)])
+    .domain([d3.min(censusData, d => d.poverty)*0.9, d3.max(censusData, d => d.poverty)*1.1])
     .range([0, width]);
 
     var yScale = d3.scaleLinear()
-    .domain([0, d3.max(censusData, d => d.poverty)])
+    .domain([d3.min(censusData, d => d.healthcare)*0.9, d3.max(censusData, d => d.healthcare)*1.1])
     .range([height, 0]);
   
     var bottomAxis = d3.axisBottom(xScale);
@@ -59,14 +59,14 @@ function makeResponsive() {
     .attr("fill", "pink")
     .attr("opacity", ".5")
   
-    //.append("text")
-    //.text(function(d){
-      //return d.abbr;
-    //})
-    //.attr("cx", d => xScale(d.poverty))
-    //.attr("cy", d => yScale(d.healthcare))
-    //.attr("font-size", "20px")
-    //.attr("fill", "black");
+    var circlesLabel = chartGroup.selectAll("state")
+    .data(censusData)
+    .enter()
+    .append("text")
+    .attr("x", d => xScale(d.poverty)-15/2)
+    .attr("y", d => yScale(d.healthcare)+15/2)
+    .attr("fill", "black")
+    .text(d => d.abbr);
   
     
 
@@ -100,7 +100,7 @@ function makeResponsive() {
       .attr("x", 0 - (height / 2))
       .attr("dy", "1em")
       .attr("class", "axisText")
-      .text("Healthcare");
+      .text("Lacks Healthcare %");
 
     chartGroup.append("text")
       .attr("transform", `translate(${width / 2}, ${height + margin.top + 30})`)
